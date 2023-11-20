@@ -1,0 +1,105 @@
+@startuml
+
+class Checkpoints {
+	+ epoch: bigint
+	+ sequence: bigint
+	+ digest: varchar
+	+ network_total_transactions: bigint
+	+ previous_digest: varchar
+	+ timestamp_ms: long
+	+ transactions: List<varchar>
+	+ checkpoint_commitments: List<varchar>
+	+ validator_signature: varchar
+	+ computation_cost: long
+	+ storage_cost: long
+	+ storage_rebate: long
+	+ non_refundable_storage_fee: long
+}
+
+class Events {
+	+ checkpoint: bigint
+	+ timestamp: datetime
+	+ tx_digest: varchar
+	+ event_seq: bigint
+	+ package_id: varchar
+	+ transaction_module: varchar
+	+ sender: varchar
+	+ type: varchar
+	+ parsed_json: varchar
+	+ bcs: varchar
+}
+
+class Transaction_Blocks{
+	+ digest: varchar
+	+ timestamp_ms: bigint
+	+ payment: varchar[]
+	+ gas_owner: varchar
+	+ price: bigint
+	+ budget: bigint
+	+ sender: varchar
+	+ transaction: varchar
+	+ tx_signatures: varchar[]
+	+ len_events: bigint
+	+ checkpoint: bigint
+	+ message_version: varchar
+	+ status: varchar
+	+ gas_computation_cost: bigint
+	+ gas_storage_cost: bigint
+	+ gas_storage_rebate: bigint
+	+ gas_non_refundable_storage_fee: bigint
+	+ modified_at_versions: varchar[]
+	+ shared_objects: varchar[]
+	+ created: varchar[]
+	+ mutated: varchar[]
+	+ deleted: varchar[]
+	+ gas_object: varchar
+	+ events_digest: varchar
+	+ dependencies: varchar[]
+	+ object_change: varchar[]
+	+ balance_change: varchar[]
+}
+
+
+class Payments {
+	checkpoint: bigint
+	tx_digest: varchar
+	timestamp_ms: bigint
+
+	object_id: string
+	version: int
+	digest: string
+
+	payment_seq: bigint
+}
+
+class MoveCalls {
+  checkpoint: bigint
+  timestamp_ms: string
+  tx_digest: string
+  move_call_seq: bigint
+  package: string
+  module: string
+  function: string
+  arguments: string
+}
+class Objects {
+  object_id: string
+  version: string
+  digest: string
+  type: string
+  owner_type: string
+  owner_address: string
+  has_public_transfer: boolean
+  storage_rebate: bigint
+  initial_shared_version: string
+  previous_transaction: string
+  content: string
+  bcs: string
+}
+
+Checkpoints <-- Transaction_Blocks
+Transaction_Blocks <|-- Events
+Transaction_Blocks <|-- Payments
+Transaction_Blocks <|-- MoveCalls
+Transaction_Blocks <|-- Objects
+@enduml
