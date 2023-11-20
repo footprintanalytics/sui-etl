@@ -24,6 +24,7 @@
 import logging
 import os
 import time
+from datetime import datetime
 
 from blockchainetl_common.file_utils import smart_open
 
@@ -51,6 +52,9 @@ class Streamer:
         self.block_batch_size = block_batch_size
         self.retry_errors = retry_errors
         self.pid_file = pid_file
+
+        self.penultimate_block = None
+        self.penultimate_time = None
 
         if self.start_block is not None or not os.path.isfile(self.last_synced_block_file):
             init_last_synced_block_file((self.start_block or 0) - 1, self.last_synced_block_file)
@@ -95,6 +99,15 @@ class Streamer:
 
         logging.info('Current block {}, target block {}, last synced block {}, blocks to sync {}, remain blocks {}'.format(
             current_block, target_block, self.last_synced_block, blocks_to_sync, blocks_remain))
+        if self.penultimate_time and self.penultimate_block:
+            block_diff = self.last_synced_block - self.penultimate_block
+            time_diff = (datetime.now() - self.penultimate_time).total_seconds()
+            speed = block_diff/time_diff
+            remain_time = blocks_remain/speed/60/60
+            logging.info(f'Predict finish time: {remain_time:.2f} hours  speed: {speed:.2f} blocs/secs ')
+
+        self.penultimate_block = self.last_synced_block
+        self.penultimate_time = datetime.now()
 
         if blocks_to_sync != 0:
             self.blockchain_streamer_adapter.export_all(self.last_synced_block + 1, target_block)
