@@ -135,7 +135,7 @@ class BatchMultiHTTPProvider(HTTPProvider):
                 self.endpoint.endpoint_url,
                 request_data,
                 headers=headers,
-                timeout=10
+                timeout=20
             )
             response = self.decode_rpc_response(raw_response)
             self.logger.debug("Getting response HTTP. URI: %s, "
