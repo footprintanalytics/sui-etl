@@ -4,7 +4,7 @@ from blockchainetl_common.executors.batch_work_executor import BatchWorkExecutor
 from blockchainetl_common.jobs.base_job import BaseJob
 from blockchainetl_common.utils import validate_range
 
-from base.misc.retriable_value_error import RetriableValueError
+from suietl.misc.retriable_value_error import RetriableValueError
 from suietl.json_rpc_requests import generate_get_block_by_number_json_rpc
 from suietl.mappers.checkpoint_mapper import CheckpointMapper
 from suietl.utils import rpc_response_batch_to_results
