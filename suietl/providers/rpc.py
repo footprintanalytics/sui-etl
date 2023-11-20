@@ -1,6 +1,6 @@
-# MIT License
+# The MIT License (MIT)
 #
-# Copyright (c) 2018 Evgeny Medvedev, evge.medvedev@gmail.com
+# Copyright (c) 2016 Piper Merriam
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,27 +18,28 @@
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-
-import click
-
-from suietl.cli.export_transaction_blocks_and_events import export_transaction_blocks_and_events
-from suietl.cli.export_checkpoints import export_checkpoints
-from suietl.cli.stream import stream
-from suietl.cli.extract_files import extract_field_file as extract_field
+# SOFTWARE.
 
 
-
-@click.group()
-@click.version_option(version='1.0.0')
-@click.pass_context
-def cli(ctx):
-    pass
+from web3 import HTTPProvider
+from web3._utils.request import make_post_request
 
 
-# export
-cli.add_command(export_transaction_blocks_and_events, "export_transaction_blocks_and_events")
-cli.add_command(export_checkpoints, "export_checkpoints")
-cli.add_command(stream, "stream")
+# Mostly copied from web3.py/providers/rpc.py. Supports batch requests.
+# Will be removed once batch feature is added to web3.py https://github.com/ethereum/web3.py/issues/832
+class BatchHTTPProvider(HTTPProvider):
 
-# utils
-cli.add_command(extract_field, "extract_field")
+    def make_batch_request(self, text):
+        self.logger.debug("Making request HTTP. URI: %s, Request: %s",
+                          self.endpoint_uri, text)
+        request_data = text.encode('utf-8')
+        raw_response = make_post_request(
+            self.endpoint_uri,
+            request_data,
+            **self.get_request_kwargs()
+        )
+        response = self.decode_rpc_response(raw_response)
+        self.logger.debug("Getting response HTTP. URI: %s, "
+                          "Request: %s, Response: %s",
+                          self.endpoint_uri, text, response)
+        return response

@@ -18,27 +18,25 @@
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-
-import click
-
-from suietl.cli.export_transaction_blocks_and_events import export_transaction_blocks_and_events
-from suietl.cli.export_checkpoints import export_checkpoints
-from suietl.cli.stream import stream
-from suietl.cli.extract_files import extract_field_file as extract_field
+# SOFTWARE.
 
 
+# https://stackoverflow.com/questions/15063936/csv-error-field-larger-than-field-limit-131072
 
-@click.group()
-@click.version_option(version='1.0.0')
-@click.pass_context
-def cli(ctx):
-    pass
+import sys
+import csv
 
 
-# export
-cli.add_command(export_transaction_blocks_and_events, "export_transaction_blocks_and_events")
-cli.add_command(export_checkpoints, "export_checkpoints")
-cli.add_command(stream, "stream")
+def set_max_field_size_limit():
+    max_int = sys.maxsize
+    decrement = True
+    while decrement:
+        # decrease the maxInt value by factor 10
+        # as long as the OverflowError occurs.
 
-# utils
-cli.add_command(extract_field, "extract_field")
+        decrement = False
+        try:
+            csv.field_size_limit(max_int)
+        except OverflowError:
+            max_int = int(max_int / 10)
+            decrement = True

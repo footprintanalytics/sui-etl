@@ -36,7 +36,7 @@ class TransactionBlockMapper:
 
     def to_dict(self):
         return {
-            'type': 'transaction_block',
+            'type': 'transaction',
             "digest": self.digest,
             "timestamp_ms": self.timestamp_ms,
             "payment": self.payment,

@@ -18,27 +18,26 @@
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
-import click
-
-from suietl.cli.export_transaction_blocks_and_events import export_transaction_blocks_and_events
-from suietl.cli.export_checkpoints import export_checkpoints
-from suietl.cli.stream import stream
-from suietl.cli.extract_files import extract_field_file as extract_field
+import logging
+from datetime import datetime
 
 
+class EthItemTimestampCalculator:
+    def calculate(self, item):
+        if item is None or not isinstance(item, dict):
+            return None
 
-@click.group()
-@click.version_option(version='1.0.0')
-@click.pass_context
-def cli(ctx):
-    pass
+        item_type = item.get('type')
+
+        if item.get('timestamp_ms') is not None:
+            return epoch_seconds_to_rfc3339(item.get('timestamp_ms')/1000)
+
+        logging.warning('item_timestamp for item {} is None'.format(item_type))
+
+        return None
 
 
-# export
-cli.add_command(export_transaction_blocks_and_events, "export_transaction_blocks_and_events")
-cli.add_command(export_checkpoints, "export_checkpoints")
-cli.add_command(stream, "stream")
-
-# utils
-cli.add_command(extract_field, "extract_field")
+def epoch_seconds_to_rfc3339(timestamp):
+    return datetime.utcfromtimestamp(int(timestamp)).isoformat() + 'Z'

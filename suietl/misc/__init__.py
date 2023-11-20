@@ -18,27 +18,4 @@
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-
-import click
-
-from suietl.cli.export_transaction_blocks_and_events import export_transaction_blocks_and_events
-from suietl.cli.export_checkpoints import export_checkpoints
-from suietl.cli.stream import stream
-from suietl.cli.extract_files import extract_field_file as extract_field
-
-
-
-@click.group()
-@click.version_option(version='1.0.0')
-@click.pass_context
-def cli(ctx):
-    pass
-
-
-# export
-cli.add_command(export_transaction_blocks_and_events, "export_transaction_blocks_and_events")
-cli.add_command(export_checkpoints, "export_checkpoints")
-cli.add_command(stream, "stream")
-
-# utils
-cli.add_command(extract_field, "extract_field")
+# SOFTWARE.

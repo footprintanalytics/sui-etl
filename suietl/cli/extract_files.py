@@ -1,6 +1,6 @@
 import click
 
-from util.common_function import extract_field
+from suietl import misc_utils
 
 
 @click.command(context_settings=dict(help_option_names=['-h', '--help']))
@@ -11,7 +11,7 @@ from util.common_function import extract_field
 @click.option('-f', '--field', required=True, type=str, help='The field name to extract.')
 def extract_field_file(input, output, field):
     """Extracts field from given CSV or JSON newline-delimited file."""
-    extract_field(input, output, field)
+    misc_utils.extract_field(input, output, field)
 
 
 

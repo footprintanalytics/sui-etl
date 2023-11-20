@@ -1,15 +1,18 @@
 import json
 
-import pydash
+from blockchainetl_common.executors.batch_work_executor import BatchWorkExecutor
+from blockchainetl_common.jobs.base_job import BaseJob
 
+from suietl.json_rpc_requests import generate_get_tx_json_rpc
 from suietl.mappers.event_mapper import EventMapper
 from suietl.mappers.move_call_mapper import MoveCallMapper
 from suietl.mappers.object_mapper import ObjectMapper
 from suietl.mappers.payment_mapper import PaymentMapper
 from suietl.mappers.transaction_block_mapper import TransactionBlockMapper
-from suietl.service.service import Service
-from blockchainetl_common.executors.batch_work_executor import BatchWorkExecutor
-from blockchainetl_common.jobs.base_job import BaseJob
+from suietl.utils import rpc_response_batch_to_results
+
+
+# from suietl.service.service import Service
 
 
 class ExportTransactionBlocksJob(BaseJob):
@@ -17,7 +20,7 @@ class ExportTransactionBlocksJob(BaseJob):
             self,
             transaction_block_digest_iterable,
             batch_size,
-            rpc,
+            batch_web3_provider,
             max_workers,
             item_exporter,
             export_events=True,
@@ -27,11 +30,12 @@ class ExportTransactionBlocksJob(BaseJob):
             export_objects=True
     ):
 
-        self.rpc = rpc
         self.transaction_block_digest_iterable = transaction_block_digest_iterable
 
         self.item_exporter = item_exporter
-        self.batch_work_executor = BatchWorkExecutor(1, max_workers)  # 这里因为sui有自带的batch功能, 这里默认size为1
+        self.batch_work_executor = BatchWorkExecutor(batch_size, max_workers)
+
+        self.batch_web3_provider = batch_web3_provider
 
         self.export_transaction_blocks = export_transaction_blocks
         self.export_events = export_events
@@ -41,7 +45,6 @@ class ExportTransactionBlocksJob(BaseJob):
         if not self.export_transaction_blocks and not self.export_events:
             raise ValueError('At least one of export_transaction_blocks or export_events')
 
-        self.service = Service(rpc)
         self.transaction_block_mapper = TransactionBlockMapper
         self.event_mapper = EventMapper
         self.payment_mapper = PaymentMapper
@@ -52,13 +55,12 @@ class ExportTransactionBlocksJob(BaseJob):
         self.item_exporter.open()
 
     def _export(self):
-        self.batch_work_executor.execute(pydash.chunk(
-            list(self.transaction_block_digest_iterable), 50),
-            self._export_transaction_blocks
-        )
+        self.batch_work_executor.execute(self.transaction_block_digest_iterable, self._export_transaction_blocks)
 
     def _export_transaction_blocks(self, transaction_hashes):
-        tx_blocks = self.service.transaction_blocks(transaction_hashes[0])
+        tx_rpc = generate_get_tx_json_rpc(transaction_hashes)
+        response, endpoint_url = self.batch_web3_provider.make_batch_request(json.dumps(tx_rpc))
+        tx_blocks = rpc_response_batch_to_results(response)
         for tx_block in tx_blocks:
             self._export_transaction_block(tx_block)
 
@@ -81,23 +83,6 @@ class ExportTransactionBlocksJob(BaseJob):
                     if list(tx.keys())[0] == 'MoveCall':
                         _tx = self.move_call_mapper.from_dict(tx['MoveCall'], index, transaction_blocks)
                         self.item_exporter.export_item(_tx.to_dict())
-        if self.export_objects:
-            object_array = transaction_blocks["effects"].get("modifiedAtVersions")
-            if object_array:
-                object_list = list(set([object['objectId'] for object in object_array]))
-                # _object = self.service.get_past_obj1ects([{"version": str(object['version']), "objectId": object['objectId']}])
-                if len(object_list) > 50:
-                    for i in range(0, len(object_list), 50):
-                        _objects = self.service.get_objects(object_list[i:i + 50])['result']
-                        if _objects:
-                            for _object in _objects:
-                                data = _object.get('data')
-                                if data:
-                                    _object = self.object_mapper.from_dict(data, transaction_blocks['checkpoint'])
-                                    self.item_exporter.export_item(_object.to_dict())
-
-
-
     def _end(self):
         self.batch_work_executor.shutdown()
         self.item_exporter.close()

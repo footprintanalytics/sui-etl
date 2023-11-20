@@ -1,0 +1,6 @@
+class EntityType:
+    CHECKPOINT = 'checkpoints'
+    TRANSACTION = 'transaction'
+
+    ALL_FOR_STREAMING = [CHECKPOINT, TRANSACTION]
+    ALL_FOR_INFURA = [CHECKPOINT, TRANSACTION]

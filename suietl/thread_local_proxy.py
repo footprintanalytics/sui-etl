@@ -18,27 +18,21 @@
 # AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-
-import click
-
-from suietl.cli.export_transaction_blocks_and_events import export_transaction_blocks_and_events
-from suietl.cli.export_checkpoints import export_checkpoints
-from suietl.cli.stream import stream
-from suietl.cli.extract_files import extract_field_file as extract_field
+# SOFTWARE.
 
 
-
-@click.group()
-@click.version_option(version='1.0.0')
-@click.pass_context
-def cli(ctx):
-    pass
+import threading
 
 
-# export
-cli.add_command(export_transaction_blocks_and_events, "export_transaction_blocks_and_events")
-cli.add_command(export_checkpoints, "export_checkpoints")
-cli.add_command(stream, "stream")
+class ThreadLocalProxy:
+    def __init__(self, delegate_factory):
+        self._thread_local = threading.local()
+        self._delegate_factory = delegate_factory
 
-# utils
-cli.add_command(extract_field, "extract_field")
+    def __getattr__(self, name):
+        return getattr(self._get_thread_local_delegate(), name)
+
+    def _get_thread_local_delegate(self):
+        if getattr(self._thread_local, '_delegate', None) is None:
+            self._thread_local._delegate = self._delegate_factory()
+        return self._thread_local._delegate
