@@ -105,8 +105,9 @@ class Streamer:
             speed = block_diff/time_diff
             if speed == 0:
                 logging.warning('Speed is 0, maybe something wrong')
-            remain_time = blocks_remain/speed/60/60
-            logging.info(f'Predict finish time: {remain_time:.2f} hours  speed: {speed:.2f} blocs/secs ')
+            else:
+                remain_time = blocks_remain/speed/60/60
+                logging.info(f'Predict finish time: {remain_time:.2f} hours  speed: {speed:.2f} blocs/secs ')
 
         self.penultimate_block = self.last_synced_block
         self.penultimate_time = datetime.now()
